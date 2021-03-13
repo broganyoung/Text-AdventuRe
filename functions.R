@@ -1,13 +1,35 @@
 ####Load References####
 room_list <- read.csv(paste(getwd(), "/references/room_list.csv", sep = ""))
 look_list <- read.csv(paste(getwd(), "/references/look_list.csv", sep = ""))
+item_list <- read.csv(paste(getwd(), "/references/item_list.csv", sep = ""))
+actor_list <- read.csv(paste(getwd(), "/references/actor_list.csv", sep = ""))
+
+####Setup####
+room_current <- subset(room_list, room_list$RoomID == "Test5")
+ycoords <- 0
+xcoords <- 0
 
 ####Look####
 #To get description
 look <- function(x){
   #If no object supplied, give room description
   if(missingArg(x)){
-    cat(room_current$RoomDescription)
+    RoomDescription <- room_current$RoomDescription
+    extras <- c()
+    item_list_current <- subset(item_list, item_list$Location == room_current$RoomID)
+    if(nrow(item_list_current) > 0){
+      for(a in 1:nrow(item_list_current)){
+        extras <- (paste(extras, "You see a ", item_list_current$ItemName[a], "\n", sep = ""))
+      }
+    }
+    actor_list_current <- subset(actor_list, actor_list$Location == room_current$RoomID)
+    if(nrow(actor_list_current) > 0){
+      for(a in 1:nrow(actor_list_current)){
+        extras <- (paste(extras, "You see a ", actor_list_current$ActorName[a], "\n", sep = ""))
+      }
+    }
+    RoomDescription <- paste(RoomDescription, "\n", extras, sep = "")
+    cat(RoomDescription)
   } else {
     #Format input
     x <- tolower(x)
@@ -27,12 +49,11 @@ look <- function(x){
         cat("Which one?")
       }
       if(nrow(look_current) == 1){
-        if(look_current$type == "item"){
+        if(look_current$Type == "item"){
           look_current <- subset(item_list, item_list$ItemID == look_current$ID)
           cat(look_current$ItemDescription)
-        }
-        if(look_current$type == "actor"){
-          look_current <- subset(actor_list, actor_list$ItemID == look_current$ID)
+        } else {
+          look_current <- subset(actor_list, actor_list$ActorID == look_current$ID)
           cat(look_current$ActorDescription)
         }
       }
