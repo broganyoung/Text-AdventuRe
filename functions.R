@@ -8,6 +8,7 @@ actor_list <- read.csv(paste(getwd(), "/references/actor_list.csv", sep = ""))
 room_current <- subset(room_list, room_list$RoomID == "Test5")
 ycoords <- 0
 xcoords <- 0
+inventory <- data.frame()
 
 ####Look####
 #To get description
@@ -48,6 +49,7 @@ look <- function(x){
       if(nrow(look_current) > 1){
         cat("Which one?")
       }
+      #If just one, then cat the description
       if(nrow(look_current) == 1){
         if(look_current$Type == "item"){
           look_current <- subset(item_list, item_list$ItemID == look_current$ID)
@@ -58,6 +60,27 @@ look <- function(x){
         }
       }
     }
+  }
+}
+
+
+####Get####
+#To pickup objects and put in inventory
+get <- function(x){
+  #format x
+  x <- tolower(x)
+  #check if item exists in room
+  room_items <- subset(item_list, item_list$Location == room_current$RoomID)
+  room_items <- subset(room_items, room_items$PossibleName == x)
+  if(nrow(room_items) == 0){
+    cat("You can't see this.")
+  } else {
+    #if item exists in room, add to inventory and change location
+    room_items$Location <- NULL
+    inventory <<- rbind(inventory, cbind(room_items))
+    item_list$Location[[item_list$ItemID == room_items$ItemID[1]]] <<- "inventory"
+    look_list$Location[[look_list$ItemID == room_items$ItemID[1]]] <<- "inventory"
+    cat(paste("You pick up the "), x, sep = "")
   }
 }
 
