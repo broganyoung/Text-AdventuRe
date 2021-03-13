@@ -1,8 +1,11 @@
+####Load Libraries####
+
 ####Load References####
 room_list <- read.csv(paste(getwd(), "/references/room_list.csv", sep = ""))
 look_list <- read.csv(paste(getwd(), "/references/look_list.csv", sep = ""))
 item_list <- read.csv(paste(getwd(), "/references/item_list.csv", sep = ""))
 actor_list <- read.csv(paste(getwd(), "/references/actor_list.csv", sep = ""))
+text_list <- read.csv(paste(getwd(), "/references/text_list.csv", sep = ""))
 
 ####Setup####
 room_current <- subset(room_list, room_list$RoomID == "Test5")
@@ -87,71 +90,110 @@ get <- function(x){
 ####Go####
 #To move the player
 go <- function(x){
-  #reset valid direction check
-  check <- 0
-  #format input
-  x <- gsub("-", " ", x)
-  x <- strsplit(x, " ")
-  x <- paste(substr(x[[1]][1], 1, 1), substr(x[[1]][2], 1, 1), sep = "")
-  x <- tolower(x)
-  x <- gsub("na", "", x)
-  #reset new coords
-  ycoords_new <- 0
-  xcoords_new <- 0
-  #check input and set new coords
-  if(x == "n"){
-    ycoords_new <- ycoords + 1
-    xcoords_new <- xcoords
-    check <- 1
-  }
-  if(x == "s"){
-    ycoords_new <- ycoords - 1
-    xcoords_new <- xcoords
-    check <- 1
-  }
-  if(x == "e"){
-    xcoords_new <- xcoords + 1
-    ycoords_new <- ycoords
-    check <- 1
-  }
-  if(x == "w"){
-    xcoords_new <- xcoords - 1
-    ycoords_new <- ycoords
-    check <- 1
-  }
-  if(x == "ne"){
-    ycoords_new <- ycoords + 1
-    xcoords_new <- xcoords + 1
-    check <- 1
-  }
-  if(x == "nw"){
-    ycoords_new <- ycoords + 1
-    xcoords_new <- xcoords - 1
-    check <- 1
-  }
-  if(x == "se"){
-    ycoords_new <- ycoords - 1
-    xcoords_new <- xcoords + 1
-    check <- 1
-  }
-  if(x == "sw"){
-    ycoords_new <- ycoords - 1
-    xcoords_new <- xcoords - 1
-    check <- 1
-  }
-  #check if input was valid
-  if(check == 0){
-    cat("That's not a direction.")
+  if(missingArg(x)){
+    cat("Go where?")
   } else {
-    #check if can go in direction in current room
-    if(room_current[[paste("cango", toupper(x), sep = "")]] == 1){
-      #set coords to coords_new, change room and look in new room
-      ycoords <<- ycoords_new
-      xcoords <<- xcoords_new
-      room_current <<- subset(room_list, room_list$ycoords == ycoords_new & room_list$xcoords == xcoords_new)
-      look()
+    #reset valid direction check
+    check <- 0
+    #format input
+    x <- gsub("-", " ", x)
+    x <- strsplit(x, " ")
+    x <- paste(substr(x[[1]][1], 1, 1), substr(x[[1]][2], 1, 1), sep = "")
+    x <- tolower(x)
+    x <- gsub("na", "", x)
+    #reset new coords
+    ycoords_new <- 0
+    xcoords_new <- 0
+    #check input and set new coords
+    if(x == "n"){
+      ycoords_new <- ycoords + 1
+      xcoords_new <- xcoords
+      check <- 1
+    }
+    if(x == "s"){
+      ycoords_new <- ycoords - 1
+      xcoords_new <- xcoords
+      check <- 1
+    }
+    if(x == "e"){
+      xcoords_new <- xcoords + 1
+      ycoords_new <- ycoords
+      check <- 1
+    }
+    if(x == "w"){
+      xcoords_new <- xcoords - 1
+      ycoords_new <- ycoords
+      check <- 1
+    }
+    if(x == "ne"){
+      ycoords_new <- ycoords + 1
+      xcoords_new <- xcoords + 1
+      check <- 1
+    }
+    if(x == "nw"){
+      ycoords_new <- ycoords + 1
+      xcoords_new <- xcoords - 1
+      check <- 1
+    }
+    if(x == "se"){
+      ycoords_new <- ycoords - 1
+      xcoords_new <- xcoords + 1
+      check <- 1
+    }
+    if(x == "sw"){
+      ycoords_new <- ycoords - 1
+      xcoords_new <- xcoords - 1
+      check <- 1
+    }
+    #check if input was valid
+    if(check == 0){
+      cat("That's not a direction.")
     } else {
-      cat("You cannot go that way.")
+      #check if can go in direction in current room
+      if(room_current[[paste("cango", toupper(x), sep = "")]] == 1){
+        #set coords to coords_new, change room and look in new room
+        ycoords <<- ycoords_new
+        xcoords <<- xcoords_new
+        room_current <<- subset(room_list, room_list$ycoords == ycoords_new & room_list$xcoords == xcoords_new)
+        direction_text <- subset(text_list, text_list$TextID == x)
+        direction_text <- direction_text$Text
+        cat(paste("You go ", direction_text, "\n", sep = ""))
+        look()
+      } else {
+        cat("You cannot go that way.")
+      }
     }
   }
+}
+
+#generate prompt text
+prompt_text <- subset(prompt_list$Prompt_Text, prompt_list$Prompt_Number == sample(1:10, 1))
+#ask player what they want to do
+command <- readline(prompt = paste(prompt_text, " ", sep = ""))
+if(str_detect(command, "go") == TRUE | str_detect(command, "move") == TRUE){
+  command <- gsub("go", "", command)
+  command <- gsub("move", "", command)
+  command <- gsub("to", "", command)
+  command <- gsub("the", "", command)
+  str_trim(command)
+  go(command)
+}
+if(str_detect(command, "look") == TRUE){
+  command <- gsub("look", "", command)
+  command <- gsub("at", "", command)
+  command <- gsub("the", "", command)
+  str_trim(command)
+  if(command == ""){
+    look()
+  } else {
+    look(command)
+  }
+}
+if(str_detect(command, "get") == TRUE | str_detect(command, "take") == TRUE | str_detect(command, "pick up") == TRUE){
+  command <- gsub("get", "", command)
+  command <- gsub("take", "", command)
+  command <- gsub("pick up", "", command)
+  command <- gsub("the", "", command)
+  str_trim(command)
+  go(command)
 }
