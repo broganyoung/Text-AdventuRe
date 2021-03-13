@@ -11,14 +11,22 @@ look <- function(x){
   } else {
     #Format input
     x <- tolower(x)
-    look_current <- subset(look_list, look_list$Object == x)
-    #Check if input is valid
+    #Get room objects and inventory objects
+    look_current <- subset(look_list, look_list$Location == room_current$RoomID | look_list$Location == "inventory")
+    #Check room has any objects
     if(nrow(look_current) == 0){
       cat("You cannot see this.")
     } else {
-      #If input is valid check it is in room_current or inventory
-      if(look_current$Location == room_current$RoomID | look_current$Location == "inventory"){
-        #If input is in room, cat the description from correct list
+      #If room has objects, check input is in there
+      look_current <- subset(look_current, look_current$PossibleName == x)
+      if(nrow(look_current) == 0){
+        cat("You cannot see this.")
+      }
+      #If there is more than one match then ask player again
+      if(nrow(look_current) > 1){
+        cat("Which one?")
+      }
+      if(nrow(look_current) == 1){
         if(look_current$type == "item"){
           look_current <- subset(item_list, item_list$ItemID == look_current$ID)
           cat(look_current$ItemDescription)
@@ -27,8 +35,6 @@ look <- function(x){
           look_current <- subset(actor_list, actor_list$ItemID == look_current$ID)
           cat(look_current$ActorDescription)
         }
-      } else {
-        cat("You cannot see this.")
       }
     }
   }
