@@ -1,3 +1,39 @@
+####Load References####
+room_list <- read.csv(paste(getwd(), "/references/room_list.csv", sep = ""))
+look_list <- read.csv(paste(getwd(), "/references/look_list.csv", sep = ""))
+
+####Look####
+#To get description
+look <- function(x){
+  #If no object supplied, give room description
+  if(missingArg(x)){
+    cat(room_current$RoomDescription)
+  } else {
+    #Format input
+    x <- tolower(x)
+    look_current <- subset(look_list, look_list$Object == x)
+    #Check if input is valid
+    if(nrow(look_current) == 0){
+      cat("You cannot see this.")
+    } else {
+      #If input is valid check it is in room_current or inventory
+      if(look_current$Location == room_current$RoomID | look_current$Location == "inventory"){
+        #If input is in room, cat the description from correct list
+        if(look_current$type == "item"){
+          look_current <- subset(item_list, item_list$ItemID == look_current$ID)
+          cat(look_current$ItemDescription)
+        }
+        if(look_current$type == "actor"){
+          look_current <- subset(actor_list, actor_list$ItemID == look_current$ID)
+          cat(look_current$ActorDescription)
+        }
+      } else {
+        cat("You cannot see this.")
+      }
+    }
+  }
+}
+
 ####Go####
 #To move the player
 go <- function(x){
@@ -55,20 +91,17 @@ go <- function(x){
   }
   #check if input was valid
   if(check == 0){
-    cat("That's not a direction")
+    cat("That's not a direction.")
   } else {
     #check if can go in direction in current room
     if(room_current[[paste("cango", toupper(x), sep = "")]] == 1){
       #set coords to coords_new, change room and look in new room
-      ycoords <- ycoords_new
-      xcoords <- xcoords_new
-      current_room <- subset(room_list, room_list$ycoords == ycoords & room_list$xcoords == xcoords)
-      look(current_room)
+      ycoords <<- ycoords_new
+      xcoords <<- xcoords_new
+      room_current <<- subset(room_list, room_list$ycoords == ycoords_new & room_list$xcoords == xcoords_new)
+      look()
     } else {
       cat("You cannot go that way.")
     }
   }
 }
-
-####Look####
-#To get 
